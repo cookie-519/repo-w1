@@ -2,40 +2,170 @@
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{subcaption}
 
-\title{PyTorch 项目报告}
-\author{曲润阳}
+\title{Implementation and Visualization of an MNIST Image Classifier}
+\author{Your Name}
 \date{\today}
 
 \begin{document}
 
 \maketitle
 
-\section{项目概述}
-本项目实现了一个简单的神经网络，用于 MNIST 数据集的分类任务。我们使用 PyTorch 框架构建和训练模型，并在测试集上评估其性能。
+\section{Project Overview}
+This project implements a simple neural network for the classification of the MNIST dataset. We use the PyTorch framework to build and train the model, and evaluate its performance on the test set. Additionally, we visualize the training process, including loss and accuracy changes, and display the classification results on the test set.
 
-\section{模型结构}
-我们定义了一个包含三个全连接层的简单神经网络：
+\section{Model Architecture}
+We define a simple neural network with three fully connected layers:
 \begin{itemize}
-    \item 输入层：784 个神经元（28x28 图像展平）
-    \item 隐藏层1：128 个神经元，ReLU 激活函数
-    \item 隐藏层2：64 个神经元，ReLU 激活函数
-    \item 输出层：10 个神经元（10 类分类）
+    \item Input layer: 784 neurons (28x28 image flattened)
+    \item Hidden layer 1: 128 neurons with ReLU activation
+    \item Hidden layer 2: 64 neurons with ReLU activation
+    \item Output layer: 10 neurons (10 classes)
 \end{itemize}
 
-\section{训练过程}
-我们使用了以下参数进行训练：
+\section{Training Process}
+We use the following parameters for training:
 \begin{itemize}
-    \item 学习率：0.01
-    \item 动量：0.5
-    \item 批量大小：64
-    \item 训练周期：5
+    \item Learning rate: 0.01
+    \item Momentum: 0.5
+    \item Batch size: 64
+    \item Number of epochs: 5
 \end{itemize}
 
-\section{测试结果}
-在测试集上，模型的平均损失为 0.2345，准确率为 97.5\%。
+\section{Testing Results}
+The model achieved an average loss of 0.2345 and an accuracy of 97.5\% on the test set.
 
-\section{代码链接}
-项目代码已提交到 GitHub 仓库：\url{https://github.com/yourusername/your-repo}
+\section{Visualization Results}
+\subsection{Loss and Accuracy Changes}
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{loss_plot.png}
+        \caption{Loss changes}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{accuracy_plot.png}
+        \caption{Accuracy changes}
+    \end{subfigure}
+    \caption{Training and testing loss and accuracy changes}
+\end{figure}
+
+\subsection{Classification Results on the Test Set}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{test_results.png}
+    \caption{Classification results on the test set}
+\end{figure}
+
+\section{Code}
+The following is the Python code used to implement the above model:
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small, breaklines=true]
+# Define a simple neural network
+class SimpleNet(nn.Module):
+    def __init__(self):
+        super(SimpleNet, self).__init__()
+        self.fc1 = nn.Linear(784, 128)  # 28x28 input image
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 10)   # 10 classes
+
+    def forward(self, x):
+        x = x.view(-1, 784)  # Flatten the image
+        x = torch.relu(self.fc1(x))
+        x = torch.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
+# Load the dataset
+transform = transforms.Compose([transforms.ToTensor()])
+train_dataset = datasets.MNIST(root='./data', train=True, download=True, transform=transform)
+test_dataset = datasets.MNIST(root='./data', train=False, download=True, transform=transform)
+
+train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=1000, shuffle=False)
+
+# Initialize the model, loss function, and optimizer
+model = SimpleNet()
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+
+# Train the model
+def train(epoch):
+    model.train()
+    correct = 0
+    total = 0
+    running_loss = 0.0
+    for batch_idx, (data, target) in enumerate(train_loader):
+        optimizer.zero_grad()
+        output = model(data)
+        loss = criterion(output, target)
+        loss.backward()
+        optimizer.step()
+        
+        running_loss += loss.item()
+        _, predicted = torch.max(output.data, 1)
+        total += target.size(0)
+        correct += (predicted == target).sum().item()
+    
+    train_loss = running_loss / len(train_loader)
+    train_accuracy = 100.0 * correct / total
+    train_losses.append(train_loss)
+    train_accuracies.append(train_accuracy)
+    
+    print(f'Train Epoch: {epoch} \tLoss: {train_loss:.4f} \tAccuracy: {train_accuracy:.2f}%')
+
+# Test the model
+def test():
+    model.eval()
+    test_loss = 0
+    correct = 0
+    with torch.no_grad():
+        for data, target in test_loader:
+            output = model(data)
+            test_loss += criterion(output, target).item()
+            _, predicted = torch.max(output.data, 1)
+            correct += (predicted == target).sum().item()
+    
+    test_loss /= len(test_loader.dataset)
+    test_accuracy = 100.0 * correct / len(test_loader.dataset)
+    test_losses.append(test_loss)
+    test_accuracies.append(test_accuracy)
+    
+    print(f'\nTest set: Average loss: {test_loss:.4f}, Accuracy: {test_accuracy:.2f}%\n')
+
+# Main function
+def main():
+    for epoch in range(1, 6):
+        train(epoch)
+        test()
+
+    # Plot training and testing loss and accuracy
+    plt.figure(figsize=(12, 5))
+    plt.subplot(1, 2, 1)
+    plt.plot(train_losses, label='Train Loss')
+    plt.plot(test_losses, label='Test Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    
+    plt.subplot(1, 2, 2)
+    plt.plot(train_accuracies, label='Train Accuracy')
+    plt.plot(test_accuracies, label='Test Accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    
+    plt.show()
+
+if __name__ == '__main__':
+    main()
+\end{lstlisting}
+
+\section{Conclusion}
+This project successfully implemented a simple neural network for the classification of the MNIST dataset. By visualizing the training process, including loss and accuracy changes, we gained an intuitive understanding of the model's training performance. Additionally, the classification results on the test set demonstrated the model's practical performance. Future work could include further optimization of the model architecture and hyperparameters to improve classification accuracy.
 
 \end{document}

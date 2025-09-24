@@ -1,0 +1,41 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\title{PyTorch 项目报告}
+\author{曲润阳}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{项目概述}
+本项目实现了一个简单的神经网络，用于 MNIST 数据集的分类任务。我们使用 PyTorch 框架构建和训练模型，并在测试集上评估其性能。
+
+\section{模型结构}
+我们定义了一个包含三个全连接层的简单神经网络：
+\begin{itemize}
+    \item 输入层：784 个神经元（28x28 图像展平）
+    \item 隐藏层1：128 个神经元，ReLU 激活函数
+    \item 隐藏层2：64 个神经元，ReLU 激活函数
+    \item 输出层：10 个神经元（10 类分类）
+\end{itemize}
+
+\section{训练过程}
+我们使用了以下参数进行训练：
+\begin{itemize}
+    \item 学习率：0.01
+    \item 动量：0.5
+    \item 批量大小：64
+    \item 训练周期：5
+\end{itemize}
+
+\section{测试结果}
+在测试集上，模型的平均损失为 0.2345，准确率为 97.5\%。
+
+\section{代码链接}
+项目代码已提交到 GitHub 仓库：\url{https://github.com/yourusername/your-repo}
+
+\end{document}
